@@ -3,5 +3,8 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import webExtension from 'vite-plugin-web-extension';
 
 export default defineConfig({
-  plugins: [svelte(), webExtension()],
+  plugins: [
+    svelte(),
+    webExtension({ additionalInputs: ['src/block/block.html'] }),
+  ],
 });

@@ -1,23 +1,6 @@
 import { DEFAULT_SETTINGS } from '../types.ts';
 import type { Settings, Theme } from '../types.ts';
-import { WORDS } from '../words.ts';
-
-function extractDomain(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return '';
-  }
-}
-
-function generateChallenge(wordCount: number): string {
-  const shuffled = [...WORDS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(wordCount, WORDS.length)).join(' ');
-}
-
-function escape(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+import { extractDomain, generateChallenge, escape } from '../utils.ts';
 
 const OVERLAY_CSS = `
   #dg-overlay {
@@ -172,18 +155,19 @@ function renderTyping(domain: string, challenge: string): string {
   `;
 }
 
-function unlock(): void {
+function unlock(domain: string): void {
+  void chrome.runtime.sendMessage({ type: 'ADD_UNLOCKED', domain });
   document.getElementById('dg-overlay')?.remove();
   document.getElementById('dg-hide')?.remove();
   document.getElementById('dg-style')?.remove();
 }
 
-function startTimer(duration: number): void {
+function startTimer(duration: number, domain: string): void {
   let remaining = duration;
   const countEl = document.getElementById('dg-count')!;
   const btn = document.getElementById('dg-btn') as HTMLButtonElement;
 
-  btn.addEventListener('click', unlock);
+  btn.addEventListener('click', () => unlock(domain));
 
   const interval = setInterval(() => {
     remaining--;
@@ -195,12 +179,14 @@ function startTimer(duration: number): void {
   }, 1000);
 }
 
-function setupTyping(challenge: string): void {
+function setupTyping(challenge: string, domain: string): void {
   const textarea = document.getElementById('dg-input') as HTMLTextAreaElement;
-  const challengeBox = document.getElementById('dg-challenge') as HTMLDivElement;
+  const challengeBox = document.getElementById(
+    'dg-challenge',
+  ) as HTMLDivElement;
   const btn = document.getElementById('dg-btn') as HTMLButtonElement;
 
-  btn.addEventListener('click', unlock);
+  btn.addEventListener('click', () => unlock(domain));
 
   textarea.addEventListener('input', () => {
     textarea.classList.remove('dg-error');
@@ -211,7 +197,7 @@ function setupTyping(challenge: string): void {
   textarea.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (!btn.disabled) unlock();
+      if (!btn.disabled) unlock(domain);
     }
   });
 
@@ -229,17 +215,32 @@ async function init(): Promise<void> {
   hideStyle.textContent = 'body{visibility:hidden!important}';
   document.documentElement.appendChild(hideStyle);
 
-  const result = await chrome.storage.sync.get(['domains', 'settings']);
-  const domains: string[] = (result['domains'] as string[] | undefined) ?? [];
-  const settings: Settings = { ...DEFAULT_SETTINGS, ...(result['settings'] ?? {}) };
+  const currentDomain = extractDomain(window.location.href);
+  if (!currentDomain) {
+    hideStyle.remove();
+    return;
+  }
+
+  const [syncResult, { unlocked }] = await Promise.all([
+    chrome.storage.sync.get(['domains', 'settings']),
+    chrome.runtime.sendMessage({
+      type: 'PAGE_LOAD',
+      domain: currentDomain,
+    }) as Promise<{ unlocked: boolean }>,
+  ]);
+  const domains: string[] =
+    (syncResult['domains'] as string[] | undefined) ?? [];
+  const settings: Settings = {
+    ...DEFAULT_SETTINGS,
+    ...(syncResult['settings'] ?? {}),
+  };
   const theme: Theme = settings.theme ?? 'system';
 
-  const currentDomain = extractDomain(window.location.href);
-  const isBlocked = !!currentDomain && domains.some(
-    (d) => currentDomain === d || currentDomain.endsWith(`.${d}`)
+  const isBlocked = domains.some(
+    (d) => currentDomain === d || currentDomain.endsWith(`.${d}`),
   );
 
-  if (!isBlocked) {
+  if (!isBlocked || unlocked) {
     hideStyle.remove();
     return;
   }
@@ -258,12 +259,12 @@ async function init(): Promise<void> {
   if (settings.unlockMethod === 'timer') {
     overlay.innerHTML = renderTimer(currentDomain, settings.timerDuration);
     document.documentElement.appendChild(overlay);
-    startTimer(settings.timerDuration);
+    startTimer(settings.timerDuration, currentDomain);
   } else {
     const challenge = generateChallenge(settings.typingLength);
     overlay.innerHTML = renderTyping(currentDomain, challenge);
     document.documentElement.appendChild(overlay);
-    setupTyping(challenge);
+    setupTyping(challenge, currentDomain);
   }
 }
 

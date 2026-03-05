@@ -59,20 +59,34 @@
       <h2>Unlock method</h2>
 
       <label class="option" class:selected={unlockMethod === 'timer'}>
-        <input type="radio" name="method" value="timer" bind:group={unlockMethod} />
+        <input
+          type="radio"
+          name="method"
+          value="timer"
+          bind:group={unlockMethod}
+        />
         <div class="radio-dot"></div>
         <div class="option-body">
           <span class="option-name">Wait it out</span>
-          <span class="option-desc">A countdown timer expires before you can proceed.</span>
+          <span class="option-desc"
+            >A countdown timer expires before you can proceed.</span
+          >
         </div>
       </label>
 
       <label class="option" class:selected={unlockMethod === 'typing'}>
-        <input type="radio" name="method" value="typing" bind:group={unlockMethod} />
+        <input
+          type="radio"
+          name="method"
+          value="typing"
+          bind:group={unlockMethod}
+        />
         <div class="radio-dot"></div>
         <div class="option-body">
           <span class="option-name">Type a challenge</span>
-          <span class="option-desc">Type a random sequence of words to proceed.</span>
+          <span class="option-desc"
+            >Type a random sequence of words to proceed.</span
+          >
         </div>
       </label>
     </section>
@@ -119,15 +133,28 @@
           <span class="field-desc">Controls the color scheme</span>
         </div>
         <div class="theme-toggle">
-          <button class="theme-btn" class:active={theme === 'system'} onclick={() => setTheme('system')}>System</button>
-          <button class="theme-btn" class:active={theme === 'light'}  onclick={() => setTheme('light')}>Light</button>
-          <button class="theme-btn" class:active={theme === 'dark'}   onclick={() => setTheme('dark')}>Dark</button>
+          <button
+            class="theme-btn"
+            class:active={theme === 'system'}
+            onclick={() => setTheme('system')}>System</button
+          >
+          <button
+            class="theme-btn"
+            class:active={theme === 'light'}
+            onclick={() => setTheme('light')}>Light</button
+          >
+          <button
+            class="theme-btn"
+            class:active={theme === 'dark'}
+            onclick={() => setTheme('dark')}>Dark</button
+          >
         </div>
       </div>
     </section>
 
     <div class="save-row">
-      <button class="save-btn" onclick={() => void save()}>Save settings</button>
+      <button class="save-btn" onclick={() => void save()}>Save settings</button
+      >
       <span class="toast" class:visible={saved}>Saved</span>
     </div>
   </div>
@@ -136,7 +163,11 @@
 <style lang="scss">
   @use '../styles/vars' as *;
 
-  :global(*) { box-sizing: border-box; margin: 0; padding: 0; }
+  :global(*) {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
   :global(body) {
     font-family: $font;
@@ -193,9 +224,13 @@
     padding: 13px 0;
     cursor: pointer;
 
-    &:not(:last-child) { border-bottom: 1px solid var(--border); }
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--border);
+    }
 
-    input[type='radio'] { display: none; }
+    input[type='radio'] {
+      display: none;
+    }
 
     .radio-dot {
       width: 17px;
@@ -204,7 +239,9 @@
       border: 1.5px solid var(--border-2);
       flex-shrink: 0;
       margin-top: 2px;
-      transition: border-color $transition, background $transition;
+      transition:
+        border-color $transition,
+        background $transition;
       position: relative;
 
       &::after {
@@ -220,7 +257,9 @@
     &.selected .radio-dot {
       border-color: var(--accent);
       background: var(--accent);
-      &::after { background: var(--accent-fg); }
+      &::after {
+        background: var(--accent-fg);
+      }
     }
   }
 
@@ -230,8 +269,14 @@
     gap: 2px;
   }
 
-  .option-name { font-size: 14px; font-weight: 500; }
-  .option-desc { font-size: 13px; color: var(--text-2); }
+  .option-name {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .option-desc {
+    font-size: 13px;
+    color: var(--text-2);
+  }
 
   .field {
     display: flex;
@@ -239,7 +284,9 @@
     justify-content: space-between;
     padding: 13px 0;
 
-    &:not(:last-child) { border-bottom: 1px solid var(--border); }
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--border);
+    }
   }
 
   .field-label {
@@ -248,8 +295,14 @@
     gap: 2px;
   }
 
-  .field-name { font-size: 14px; font-weight: 500; }
-  .field-desc  { font-size: 13px; color: var(--text-2); }
+  .field-name {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .field-desc {
+    font-size: 13px;
+    color: var(--text-2);
+  }
 
   .field-input {
     width: 76px;
@@ -262,10 +315,17 @@
     text-align: center;
     color: var(--text);
     background: var(--bg);
-    transition: border-color $transition, opacity $transition;
+    transition:
+      border-color $transition,
+      opacity $transition;
 
-    &:focus   { border-color: var(--accent); }
-    &:disabled { opacity: 0.35; cursor: not-allowed; }
+    &:focus {
+      border-color: var(--accent);
+    }
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
   }
 
   .theme-toggle {
@@ -286,9 +346,13 @@
     cursor: pointer;
     background: transparent;
     color: var(--text-2);
-    transition: background $transition, color $transition;
+    transition:
+      background $transition,
+      color $transition;
 
-    &:hover { color: var(--text); }
+    &:hover {
+      color: var(--text);
+    }
 
     &.active {
       background: var(--bg);
@@ -317,7 +381,9 @@
     cursor: pointer;
     transition: opacity $transition;
 
-    &:hover { opacity: 0.7; }
+    &:hover {
+      opacity: 0.7;
+    }
   }
 
   .toast {
@@ -326,6 +392,8 @@
     opacity: 0;
     transition: opacity 0.3s ease;
 
-    &.visible { opacity: 1; }
+    &.visible {
+      opacity: 1;
+    }
   }
 </style>

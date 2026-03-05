@@ -4,7 +4,7 @@ export type Theme = 'system' | 'light' | 'dark';
 export interface Settings {
   unlockMethod: UnlockMethod;
   timerDuration: number; // seconds
-  typingLength: number;  // word count
+  typingLength: number; // word count
   theme: Theme;
 }
 
