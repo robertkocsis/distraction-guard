@@ -1,0 +1,56 @@
+// Non-color SCSS variables
+$radius-sm: 6px;
+$radius-md: 9px;
+$radius-lg: 12px;
+$font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$transition: 0.15s ease;
+
+// Light theme (default)
+:root {
+  --bg:         #ffffff;
+  --bg-2:       #f8f8f8;
+  --bg-3:       #f0f0f0;
+  --border:     #e4e4e4;
+  --border-2:   #d0d0d0;
+  --text:       #111111;
+  --text-2:     #555555;
+  --text-3:     #a8a8a8;
+  --accent:     #111111;
+  --accent-fg:  #ffffff;
+  --red:        #ef4444;
+  --red-soft:   #fde8e8;
+}
+
+// System dark preference
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg:         #111111;
+    --bg-2:       #1a1a1a;
+    --bg-3:       #252525;
+    --border:     #2c2c2c;
+    --border-2:   #3a3a3a;
+    --text:       #efefef;
+    --text-2:     #999999;
+    --text-3:     #555555;
+    --accent:     #efefef;
+    --accent-fg:  #111111;
+    --red:        #f87171;
+    --red-soft:   #3d1515;
+  }
+}
+
+// Forced dark
+:root[data-theme='dark'] {
+  --bg:         #111111;
+  --bg-2:       #1a1a1a;
+  --bg-3:       #252525;
+  --border:     #2c2c2c;
+  --border-2:   #3a3a3a;
+  --text:       #efefef;
+  --text-2:     #999999;
+  --text-3:     #555555;
+  --accent:     #efefef;
+  --accent-fg:  #111111;
+  --red:        #f87171;
+  --red-soft:   #3d1515;
+}
