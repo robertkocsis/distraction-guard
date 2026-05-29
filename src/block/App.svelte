@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { DEFAULT_SETTINGS } from '../types.ts';
+  import { DEFAULT_SETTINGS, clampSettings } from '../types.ts';
   import type { Settings } from '../types.ts';
   import { applyTheme, watchSystemTheme } from '../lib/theme.ts';
   import { generateChallenge } from '../utils.ts';
@@ -24,10 +24,10 @@
 
   onMount(async () => {
     const result = await chrome.storage.sync.get(['settings']);
-    const loaded: Settings = {
+    const loaded: Settings = clampSettings({
       ...DEFAULT_SETTINGS,
       ...((result['settings'] as Partial<Settings> | undefined) ?? {}),
-    };
+    });
     settings = loaded;
     applyTheme(loaded.theme);
     stopWatchingTheme = watchSystemTheme(() => applyTheme(loaded.theme));
@@ -74,9 +74,23 @@
     }
   }
 
+  // Only http(s) targets are safe to navigate to — guard against a crafted
+  // ?url= param (e.g. javascript:) executing in the extension's origin.
+  function safeUrl(raw: string): string {
+    try {
+      const parsed = new URL(raw);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return parsed.href;
+      }
+    } catch {
+      // fall through
+    }
+    return 'about:blank';
+  }
+
   async function doUnlock() {
     await chrome.runtime.sendMessage({ type: 'ADD_UNLOCKED', domain, tabId });
-    window.location.href = originalUrl;
+    window.location.href = safeUrl(originalUrl);
   }
 </script>
 

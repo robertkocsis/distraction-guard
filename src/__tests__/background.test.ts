@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { handlePageLoad, handleAddUnlocked } from '../background/worker.ts';
+import {
+  handlePageLoad,
+  handleAddUnlocked,
+  handleTabRemoved,
+} from '../background/worker.ts';
 import { resetStorage } from './setup.ts';
 
 beforeEach(resetStorage);
@@ -62,5 +66,28 @@ describe('handleAddUnlocked', () => {
     expect(await handlePageLoad('tab1', 'youtube.com')).toEqual({
       unlocked: true,
     });
+  });
+});
+
+describe('handleTabRemoved', () => {
+  it('clears the unlock for the closed tab', async () => {
+    await handleAddUnlocked('tab1', 'reddit.com');
+    await handleTabRemoved('tab1');
+    expect(await handlePageLoad('tab1', 'reddit.com')).toEqual({
+      unlocked: false,
+    });
+  });
+
+  it('does not affect other tabs', async () => {
+    await handleAddUnlocked('tab1', 'reddit.com');
+    await handleAddUnlocked('tab2', 'reddit.com');
+    await handleTabRemoved('tab1');
+    expect(await handlePageLoad('tab2', 'reddit.com')).toEqual({
+      unlocked: true,
+    });
+  });
+
+  it('is a no-op for a tab with no stored unlock', async () => {
+    await expect(handleTabRemoved('tab9')).resolves.toBeUndefined();
   });
 });

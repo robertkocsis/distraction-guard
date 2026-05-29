@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS } from '../types.ts';
-import { extractDomain } from '../utils.ts';
+import { extractDomain, isBlocked } from '../utils.ts';
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === 'install') {
@@ -40,6 +40,19 @@ export async function handleAddUnlocked(
   await setTabUnlocks(unlocks);
 }
 
+export async function handleTabRemoved(tabId: string): Promise<void> {
+  const unlocks = await getTabUnlocks();
+  if (tabId in unlocks) {
+    delete unlocks[tabId];
+    await setTabUnlocks(unlocks);
+  }
+}
+
+// Drop a tab's unlock when it closes so session state doesn't accumulate
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void handleTabRemoved(String(tabId));
+});
+
 // Intercept navigations to blocked domains and redirect to the block page,
 // preventing the target page from loading at all.
 chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
@@ -68,10 +81,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   // Check if this domain is in the blocked list
   const result = await chrome.storage.sync.get(['domains']);
   const blockedDomains = (result['domains'] as string[] | undefined) ?? [];
-  const isBlocked = blockedDomains.some(
-    (d) => domain === d || domain.endsWith(`.${d}`),
-  );
-  if (!isBlocked) return;
+  if (!isBlocked(domain, blockedDomains)) return;
 
   // Redirect to the block page — the original site never loads
   const blockUrl =

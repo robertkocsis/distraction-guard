@@ -20,6 +20,7 @@ export function resetStorage(): void {
   },
   tabs: {
     update: vi.fn(),
+    onRemoved: { addListener: vi.fn() },
   },
   webNavigation: {
     onBeforeNavigate: { addListener: vi.fn() },

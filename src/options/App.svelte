@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { DEFAULT_SETTINGS } from '../types.ts';
+  import { onMount, onDestroy } from 'svelte';
+  import { DEFAULT_SETTINGS, clampSettings } from '../types.ts';
   import type { UnlockMethod, Theme } from '../types.ts';
   import { applyTheme, watchSystemTheme } from '../lib/theme.ts';
 
@@ -10,34 +10,42 @@
   let theme = $state<Theme>('system');
   let saved = $state(false);
 
+  let stopWatchingTheme: (() => void) | null = null;
+
+  function watchTheme(value: Theme) {
+    // Tear down any previous watcher so listeners don't accumulate
+    stopWatchingTheme?.();
+    stopWatchingTheme =
+      value === 'system' ? watchSystemTheme(() => applyTheme('system')) : null;
+  }
+
   async function load() {
     const result = await chrome.storage.sync.get('settings');
-    const settings = { ...DEFAULT_SETTINGS, ...(result['settings'] ?? {}) };
+    const settings = clampSettings({
+      ...DEFAULT_SETTINGS,
+      ...(result['settings'] ?? {}),
+    });
     unlockMethod = settings.unlockMethod;
     timerDuration = settings.timerDuration;
     typingLength = settings.typingLength;
     theme = settings.theme;
     applyTheme(settings.theme);
-    if (settings.theme === 'system') {
-      watchSystemTheme(() => applyTheme('system'));
-    }
+    watchTheme(settings.theme);
   }
 
   function setTheme(value: Theme) {
     theme = value;
     applyTheme(value);
-    if (value === 'system') {
-      watchSystemTheme(() => applyTheme('system'));
-    }
+    watchTheme(value);
   }
 
   async function save() {
-    const clamped = {
+    const clamped = clampSettings({
       unlockMethod,
-      timerDuration: Math.min(300, Math.max(10, timerDuration)),
-      typingLength: Math.min(50, Math.max(10, typingLength)),
+      timerDuration,
+      typingLength,
       theme,
-    };
+    });
     timerDuration = clamped.timerDuration;
     typingLength = clamped.typingLength;
 
@@ -48,6 +56,7 @@
   }
 
   onMount(load);
+  onDestroy(() => stopWatchingTheme?.());
 </script>
 
 <div class="page">
