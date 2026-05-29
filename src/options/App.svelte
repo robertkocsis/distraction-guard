@@ -371,14 +371,13 @@
   }
 
   .save-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-top: 6px;
+    position: relative;
+    margin-top: 14px;
   }
 
   .save-btn {
-    flex: 1;
+    display: block;
+    width: 100%;
     padding: 13px;
     background: var(--accent);
     color: var(--accent-fg);
@@ -396,6 +395,11 @@
   }
 
   .toast {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    text-align: center;
     font-size: 13px;
     color: var(--text-3);
     opacity: 0;
