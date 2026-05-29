@@ -7,6 +7,7 @@ A Chrome extension that adds intentional friction to distracting websites. Inste
 - **Domain-level blocking** — block an entire domain (e.g. `reddit.com`) from the popup
 - **Two unlock modes** — wait out a timer, or type a word challenge
 - **Dark mode** — follows system preference by default, overridable in settings
+- **Tab-level unlocks** — unlocking one tab doesn't affect others
 - **Synced storage** — blocked list and settings sync across Chrome devices
 
 ## Development
@@ -30,3 +31,7 @@ The extension is built into `dist/`. To load it in Chrome:
 - [TypeScript](https://www.typescriptlang.org) — throughout
 - [Vite](https://vitejs.dev) + [vite-plugin-web-extension](https://vite-plugin-web-extension.aklinker1.io) — build
 - [Sass](https://sass-lang.com) — styling with CSS custom properties for theming
+
+## Contributing
+
+Keep this README up to date — when you change features, setup steps, or the stack, update the relevant section in the same change so it doesn't go stale. (Architecture and developer-facing notes live in `CLAUDE.md`.)

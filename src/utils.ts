@@ -8,9 +8,21 @@ export function extractDomain(url: string): string {
   }
 }
 
+// True if `domain` matches a blocked entry exactly or is a subdomain of one
+// (so `reddit.com` blocks `old.reddit.com` but not `notreddit.com`).
+export function isBlocked(domain: string, blockedDomains: string[]): boolean {
+  return blockedDomains.some((d) => domain === d || domain.endsWith(`.${d}`));
+}
+
 export function generateChallenge(wordCount: number): string {
-  const shuffled = [...WORDS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(wordCount, WORDS.length)).join(' ');
+  const count = Math.min(wordCount, WORDS.length);
+  const pool = [...WORDS];
+  // Fisher–Yates: unbiased, unlike sort() with a random comparator
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j]!, pool[i]!];
+  }
+  return pool.slice(0, count).join(' ');
 }
 
 export function escape(str: string): string {

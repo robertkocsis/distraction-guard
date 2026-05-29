@@ -1,6 +1,11 @@
-import { DEFAULT_SETTINGS } from '../types.ts';
+import { DEFAULT_SETTINGS, clampSettings } from '../types.ts';
 import type { Settings, Theme } from '../types.ts';
-import { extractDomain, generateChallenge, escape } from '../utils.ts';
+import {
+  extractDomain,
+  generateChallenge,
+  escape,
+  isBlocked,
+} from '../utils.ts';
 
 const OVERLAY_CSS = `
   #dg-overlay {
@@ -230,17 +235,13 @@ async function init(): Promise<void> {
   ]);
   const domains: string[] =
     (syncResult['domains'] as string[] | undefined) ?? [];
-  const settings: Settings = {
+  const settings: Settings = clampSettings({
     ...DEFAULT_SETTINGS,
     ...(syncResult['settings'] ?? {}),
-  };
+  });
   const theme: Theme = settings.theme ?? 'system';
 
-  const isBlocked = domains.some(
-    (d) => currentDomain === d || currentDomain.endsWith(`.${d}`),
-  );
-
-  if (!isBlocked || unlocked) {
+  if (!isBlocked(currentDomain, domains) || unlocked) {
     hideStyle.remove();
     return;
   }
