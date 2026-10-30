@@ -5,14 +5,15 @@ A Chrome extension that adds intentional friction to distracting websites. Inste
 ## Features
 
 - **Domain-level blocking** — block an entire domain (e.g. `reddit.com`) from the popup
-- **Two unlock modes** — wait out a timer, or type a word challenge
+- **Blocked before loading** — Chrome redirects to the challenge before the site gets a single request
+- **Two unlock modes** — wait out a timer, or type a word challenge. The timer only runs while its tab is visible.
 - **Dark mode** — follows system preference by default, overridable in settings
-- **Tab-level unlocks** — unlocking one tab doesn't affect others
+- **Tab-level unlocks** — unlocking one tab doesn't affect others; leaving the site re-locks the tab
 - **Synced storage** — blocked list and settings sync across Chrome devices
 
 ## Development
 
-**Prerequisites:** Node.js 18+
+**Prerequisites:** Node.js 20.19+ (CI uses Node 24)
 
 ```bash
 npm install

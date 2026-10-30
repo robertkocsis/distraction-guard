@@ -7,9 +7,3 @@ export function applyTheme(theme: Theme): void {
     document.documentElement.dataset['theme'] = theme;
   }
 }
-
-export function watchSystemTheme(callback: () => void): () => void {
-  const mq = window.matchMedia('(prefers-color-scheme: dark)');
-  mq.addEventListener('change', callback);
-  return () => mq.removeEventListener('change', callback);
-}

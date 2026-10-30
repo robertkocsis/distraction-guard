@@ -25,6 +25,15 @@ export function generateChallenge(wordCount: number): string {
   return pool.slice(0, count).join(' ');
 }
 
-export function escape(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const HOSTNAME = /^[a-z0-9-]+(\.[a-z0-9-]+)*$/;
+
+// Turn user input like ` https://www.Reddit.com/r/all` into a bare hostname
+// (`reddit.com`), or '' if it isn't one. Hostnames come out lowercase and
+// punycoded, which is what declarativeNetRequest's `requestDomains` expects.
+export function normalizeDomain(raw: string): string {
+  const input = raw.trim();
+  const domain = extractDomain(
+    input.includes('://') ? input : `https://${input}`,
+  );
+  return HOSTNAME.test(domain) ? domain : '';
 }
