@@ -1,38 +1,23 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import { DEFAULT_SETTINGS } from '../types.ts';
-  import { applyTheme, watchSystemTheme } from '../lib/theme.ts';
+  import { applyTheme } from '../lib/theme.ts';
+  import { normalizeDomain } from '../utils.ts';
 
   let domains = $state<string[]>([]);
   let inputValue = $state('');
   let inputEl = $state<HTMLInputElement | null>(null);
-
-  let stopWatchingTheme: (() => void) | null = null;
 
   async function loadAll() {
     const result = await chrome.storage.sync.get(['domains', 'settings']);
     domains = (result['domains'] as string[] | undefined) ?? [];
     const settings = { ...DEFAULT_SETTINGS, ...(result['settings'] ?? {}) };
     applyTheme(settings.theme);
-    if (settings.theme === 'system') {
-      stopWatchingTheme = watchSystemTheme(() => applyTheme('system'));
-    }
   }
-
-  onDestroy(() => stopWatchingTheme?.());
 
   async function saveDomains(next: string[]) {
     await chrome.storage.sync.set({ domains: next });
     domains = next;
-  }
-
-  function normalizeDomain(raw: string): string {
-    return raw
-      .toLowerCase()
-      .replace(/^https?:\/\//, '')
-      .replace(/^www\./, '')
-      .split('/')[0]
-      .trim();
   }
 
   async function add() {

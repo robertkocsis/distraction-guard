@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   extractDomain,
-  escape,
   generateChallenge,
   isBlocked,
+  normalizeDomain,
 } from '../utils.ts';
 import { WORDS } from '../words.ts';
 
@@ -64,27 +64,37 @@ describe('isBlocked', () => {
   });
 });
 
-describe('escape', () => {
-  it('escapes ampersands', () => {
-    expect(escape('a & b')).toBe('a &amp; b');
+describe('normalizeDomain', () => {
+  it('keeps a bare domain', () => {
+    expect(normalizeDomain('reddit.com')).toBe('reddit.com');
   });
 
-  it('escapes less-than', () => {
-    expect(escape('<script>')).toBe('&lt;script&gt;');
-  });
-
-  it('escapes greater-than', () => {
-    expect(escape('x > y')).toBe('x &gt; y');
-  });
-
-  it('escapes all three in one string', () => {
-    expect(escape('<a href="x&y">test</a>')).toBe(
-      '&lt;a href="x&amp;y"&gt;test&lt;/a&gt;',
+  it('strips scheme, www, path, query and port', () => {
+    expect(normalizeDomain('https://www.reddit.com:8080/r/all?x=1')).toBe(
+      'reddit.com',
     );
   });
 
-  it('returns plain strings unchanged', () => {
-    expect(escape('hello world')).toBe('hello world');
+  it('trims whitespace before stripping the scheme', () => {
+    expect(normalizeDomain('  https://reddit.com  ')).toBe('reddit.com');
+  });
+
+  it('lowercases', () => {
+    expect(normalizeDomain('Reddit.COM')).toBe('reddit.com');
+  });
+
+  it('punycodes internationalized domains', () => {
+    expect(normalizeDomain('bücher.de')).toBe('xn--bcher-kva.de');
+  });
+
+  it('keeps subdomains other than www', () => {
+    expect(normalizeDomain('old.reddit.com/')).toBe('old.reddit.com');
+  });
+
+  it('rejects input that is not a hostname', () => {
+    expect(normalizeDomain('')).toBe('');
+    expect(normalizeDomain('foo bar')).toBe('');
+    expect(normalizeDomain('*.reddit.com')).toBe('');
   });
 });
 

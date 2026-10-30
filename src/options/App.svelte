@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import { DEFAULT_SETTINGS, clampSettings } from '../types.ts';
   import type { UnlockMethod, Theme } from '../types.ts';
-  import { applyTheme, watchSystemTheme } from '../lib/theme.ts';
+  import { applyTheme } from '../lib/theme.ts';
 
   let unlockMethod = $state<UnlockMethod>('timer');
   let timerDuration = $state(30);
@@ -10,14 +10,8 @@
   let theme = $state<Theme>('system');
   let saved = $state(false);
 
-  let stopWatchingTheme: (() => void) | null = null;
-
-  function watchTheme(value: Theme) {
-    // Tear down any previous watcher so listeners don't accumulate
-    stopWatchingTheme?.();
-    stopWatchingTheme =
-      value === 'system' ? watchSystemTheme(() => applyTheme('system')) : null;
-  }
+  // Preview the theme as soon as it's picked; it's persisted on save
+  $effect(() => applyTheme(theme));
 
   async function load() {
     const result = await chrome.storage.sync.get('settings');
@@ -29,14 +23,6 @@
     timerDuration = settings.timerDuration;
     typingLength = settings.typingLength;
     theme = settings.theme;
-    applyTheme(settings.theme);
-    watchTheme(settings.theme);
-  }
-
-  function setTheme(value: Theme) {
-    theme = value;
-    applyTheme(value);
-    watchTheme(value);
   }
 
   async function save() {
@@ -56,7 +42,6 @@
   }
 
   onMount(load);
-  onDestroy(() => stopWatchingTheme?.());
 </script>
 
 <div class="page">
@@ -145,17 +130,17 @@
           <button
             class="theme-btn"
             class:active={theme === 'system'}
-            onclick={() => setTheme('system')}>System</button
+            onclick={() => (theme = 'system')}>System</button
           >
           <button
             class="theme-btn"
             class:active={theme === 'light'}
-            onclick={() => setTheme('light')}>Light</button
+            onclick={() => (theme = 'light')}>Light</button
           >
           <button
             class="theme-btn"
             class:active={theme === 'dark'}
-            onclick={() => setTheme('dark')}>Dark</button
+            onclick={() => (theme = 'dark')}>Dark</button
           >
         </div>
       </div>

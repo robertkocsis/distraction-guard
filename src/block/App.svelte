@@ -1,55 +1,65 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import { DEFAULT_SETTINGS, clampSettings } from '../types.ts';
   import type { Settings } from '../types.ts';
-  import { applyTheme, watchSystemTheme } from '../lib/theme.ts';
-  import { generateChallenge } from '../utils.ts';
+  import { applyTheme } from '../lib/theme.ts';
+  import { unlockTab } from '../lib/rules.ts';
+  import { extractDomain, generateChallenge } from '../utils.ts';
 
-  const params = new URLSearchParams(window.location.search);
-  const originalUrl = params.get('url') ?? '';
-  const domain = params.get('domain') ?? '';
-  const tabId = params.get('tabId') ?? '';
+  // Only http(s) targets are safe to navigate to — guard against a crafted
+  // URL (e.g. javascript:) executing in the extension's origin.
+  function safeUrl(raw: string): string {
+    try {
+      const parsed = new URL(raw);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return parsed.href;
+      }
+    } catch {
+      // fall through
+    }
+    return 'about:blank';
+  }
 
-  let settings = $state<Settings>(DEFAULT_SETTINGS);
+  // The block rule passes the blocked URL in the hash
+  const originalUrl = safeUrl(window.location.hash.slice(1));
+  const domain = extractDomain(originalUrl);
+
+  let settings = $state<Settings>();
   let challenge = $state('');
   let timeLeft = $state(0);
   let inputValue = $state('');
-  let unlockEnabled = $state(false);
+
+  let unlockEnabled = $derived(
+    settings?.unlockMethod === 'timer'
+      ? timeLeft <= 0
+      : inputValue === challenge,
+  );
 
   let challengeBox: HTMLDivElement | undefined = $state();
   let textareaEl: HTMLTextAreaElement | undefined = $state();
 
-  let stopWatchingTheme: (() => void) | null = null;
-  let timerInterval: ReturnType<typeof setInterval> | null = null;
-
   onMount(async () => {
-    const result = await chrome.storage.sync.get(['settings']);
-    const loaded: Settings = clampSettings({
+    const result = await chrome.storage.sync.get('settings');
+    const loaded = clampSettings({
       ...DEFAULT_SETTINGS,
       ...((result['settings'] as Partial<Settings> | undefined) ?? {}),
     });
-    settings = loaded;
     applyTheme(loaded.theme);
-    stopWatchingTheme = watchSystemTheme(() => applyTheme(loaded.theme));
-
+    timeLeft = loaded.timerDuration;
     if (loaded.unlockMethod === 'typing') {
       challenge = generateChallenge(loaded.typingLength);
-    } else {
-      timeLeft = loaded.timerDuration;
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval!);
-          timerInterval = null;
-          unlockEnabled = true;
-        }
-      }, 1000);
     }
+    settings = loaded;
   });
 
-  onDestroy(() => {
-    stopWatchingTheme?.();
-    if (timerInterval) clearInterval(timerInterval);
+  // Count down only while the page is visible, so the wait can't be sat out
+  // in a background tab.
+  $effect(() => {
+    if (settings?.unlockMethod !== 'timer') return;
+    const interval = setInterval(() => {
+      if (!document.hidden && timeLeft > 0) timeLeft--;
+    }, 1000);
+    return () => clearInterval(interval);
   });
 
   $effect(() => {
@@ -63,10 +73,6 @@
     }
   });
 
-  function onInput() {
-    unlockEnabled = inputValue === challenge;
-  }
-
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -74,56 +80,44 @@
     }
   }
 
-  // Only http(s) targets are safe to navigate to — guard against a crafted
-  // ?url= param (e.g. javascript:) executing in the extension's origin.
-  function safeUrl(raw: string): string {
-    try {
-      const parsed = new URL(raw);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-        return parsed.href;
-      }
-    } catch {
-      // fall through
-    }
-    return 'about:blank';
-  }
-
   async function doUnlock() {
-    await chrome.runtime.sendMessage({ type: 'ADD_UNLOCKED', domain, tabId });
-    window.location.href = safeUrl(originalUrl);
+    const tab = await chrome.tabs.getCurrent();
+    if (tab?.id !== undefined && domain) await unlockTab(tab.id, domain);
+    // Replace, so Back from the site doesn't land on the block page again
+    window.location.replace(originalUrl);
   }
 </script>
 
 <main>
-  <div class="card">
-    <div class="domain">{domain}</div>
-    <h1 class="title">
-      {settings.unlockMethod === 'timer'
-        ? 'Intentional pause'
-        : 'Type this to continue'}
-    </h1>
-    {#if settings.unlockMethod === 'timer'}
-      <div class="count">{timeLeft}</div>
-      <div class="count-label">seconds remaining</div>
-    {:else}
-      <div class="challenge-box" bind:this={challengeBox}>{challenge}</div>
-      <textarea
-        class="typing-input"
-        bind:this={textareaEl}
-        bind:value={inputValue}
-        oninput={onInput}
-        onkeydown={onKeydown}
-        autocomplete="off"
-        autocorrect="off"
-        autocapitalize="off"
-        spellcheck={false}
-        placeholder="Type here..."
-      ></textarea>
-    {/if}
-    <button class="btn" disabled={!unlockEnabled} onclick={doUnlock}
-      >Continue</button
-    >
-  </div>
+  {#if settings}
+    <div class="card">
+      <div class="domain">{domain}</div>
+      <h1 class="title">
+        {settings.unlockMethod === 'timer'
+          ? 'Intentional pause'
+          : 'Type this to continue'}
+      </h1>
+      {#if settings.unlockMethod === 'timer'}
+        <div class="count">{timeLeft}</div>
+        <div class="count-label">seconds remaining</div>
+      {:else}
+        <div class="challenge-box" bind:this={challengeBox}>{challenge}</div>
+        <textarea
+          class="typing-input"
+          bind:this={textareaEl}
+          bind:value={inputValue}
+          onkeydown={onKeydown}
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck={false}
+          placeholder="Type here..."
+        ></textarea>
+      {/if}
+      <button class="btn" disabled={!unlockEnabled} onclick={doUnlock}
+        >Continue</button
+      >
+    </div>
+  {/if}
 </main>
 
 <style lang="scss">

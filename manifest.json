@@ -3,7 +3,12 @@
   "name": "Distraction Guard",
   "version": "1.0.0",
   "description": "Add intentional friction to distracting websites.",
-  "permissions": ["storage", "tabs", "webNavigation"],
+  "permissions": [
+    "storage",
+    "webNavigation",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": ["<all_urls>"],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -13,11 +18,10 @@
     "service_worker": "src/background/worker.ts",
     "type": "module"
   },
-  "content_scripts": [
+  "web_accessible_resources": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/content/overlay.ts"],
-      "run_at": "document_start"
+      "resources": ["src/block/block.html"],
+      "matches": ["<all_urls>"]
     }
   ],
   "action": {
