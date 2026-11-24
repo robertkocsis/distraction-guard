@@ -110,12 +110,11 @@
           autocomplete="off"
           autocapitalize="off"
           spellcheck={false}
-          placeholder="Type here..."
-        ></textarea>
+          placeholder="Type here..."></textarea>
       {/if}
-      <button class="btn" disabled={!unlockEnabled} onclick={doUnlock}
-        >Continue</button
-      >
+      <button class="btn" disabled={!unlockEnabled} onclick={doUnlock}>
+        Continue
+      </button>
     </div>
   {/if}
 </main>
