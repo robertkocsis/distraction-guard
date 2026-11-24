@@ -11,26 +11,42 @@ A Chrome extension that adds intentional friction to distracting websites. Inste
 - **Tab-level unlocks** — unlocking one tab doesn't affect others; leaving the site re-locks the tab
 - **Synced storage** — blocked list and settings sync across Chrome devices
 
+## Install
+
+1. Download `distraction-guard-<version>.zip` from the [latest release](https://github.com/robertkocsis/distraction-guard/releases/latest) and unzip it somewhere permanent (Chrome loads it from that folder, so don't delete it)
+2. Open `chrome://extensions` and enable **Developer mode**
+3. Click **Load unpacked** and select the unzipped folder
+
+To update, unzip the new release over the same folder and click the reload icon on the extension's card.
+
 ## Development
 
 **Prerequisites:** Node.js 20.19+ (CI uses Node 24)
 
 ```bash
 npm install
-npm run build
+npm run build    # one-off build into dist/
+npm run dev      # rebuild dist/ on every change
 ```
 
-The extension is built into `dist/`. To load it in Chrome:
+Load `dist/` with **Load unpacked** as above. After a rebuild, click the reload icon on the extension's card.
 
-1. Open `chrome://extensions`
-2. Enable **Developer mode**
-3. Click **Load unpacked** and select the `dist/` folder
+### Releasing
+
+Bump `version` in `manifest.json`, commit, then push a matching tag:
+
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+GitHub Actions builds the extension and publishes a release with the zip attached.
 
 ## Stack
 
 - [Svelte 5](https://svelte.dev) — popup and options UI
 - [TypeScript](https://www.typescriptlang.org) — throughout
-- [Vite](https://vitejs.dev) + [vite-plugin-web-extension](https://vite-plugin-web-extension.aklinker1.io) — build
+- [Vite](https://vitejs.dev) — build (plain multi-entry config, no extension plugin)
 - [Sass](https://sass-lang.com) — styling with CSS custom properties for theming
 
 ## Contributing
