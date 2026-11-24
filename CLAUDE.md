@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run build          # tsc typecheck + vite build → dist/ (loadable unpacked extension)
-npm run dev            # vite dev server
+npm run dev            # vite build --watch → rebuilds dist/ on change (then reload the extension in chrome://extensions)
 npm test               # vitest run (one-shot)
 npm run test:watch     # vitest watch mode
 npx vitest run src/__tests__/utils.test.ts   # run a single test file
@@ -42,7 +42,11 @@ Domain matching is a suffix match: a domain is blocked if it equals an entry or 
 
 ### Entry points
 
-`manifest.json` is the source of truth wiring it together: background `worker.ts`, action popup (`src/popup/`), and `options_ui` (`src/options/`). `vite-plugin-web-extension` reads the manifest to discover entry points; `block.html` is only referenced from `web_accessible_resources`, so it's also declared via `additionalInputs` in `vite.config.ts`.
+`manifest.json` is the source of truth wiring it together: background `worker.ts`, action popup (`src/popup/`), and `options_ui` (`src/options/`). The build is plain Vite (no extension plugin): `vite.config.ts` lists the four entries by hand (the three HTML pages plus `worker.ts`) — **add any new manifest entry point there too**. A small inline `manifest()` plugin copies `manifest.json` into `dist/`, rewriting the worker path from `src/background/worker.ts` to the built `src/background/worker.js` (the build fails if the manifest stops referencing that path). `build.modulePreload` is off because Vite's preload polyfill uses `document`, which doesn't exist in the service worker.
+
+### Releases
+
+`.github/workflows/release.yml` runs on pushed `v*` tags: it runs the CI checks, builds, and attaches `distraction-guard-<tag>.zip` (the contents of `dist/`) to a GitHub Release. The tag must match `version` in `manifest.json` (`v1.2.0` ↔ `"1.2.0"`) or the workflow fails — bump the manifest first, commit, then tag.
 
 `src/types.ts` holds `Settings` and `DEFAULT_SETTINGS` — the shared shape across all surfaces. Always spread `{ ...DEFAULT_SETTINGS, ...loaded }` when reading settings so new fields have defaults.
 

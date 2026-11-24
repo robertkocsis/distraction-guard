@@ -62,9 +62,9 @@
         <div class="radio-dot"></div>
         <div class="option-body">
           <span class="option-name">Wait it out</span>
-          <span class="option-desc"
-            >A countdown timer expires before you can proceed.</span
-          >
+          <span class="option-desc">
+            A countdown timer expires before you can proceed.
+          </span>
         </div>
       </label>
 
@@ -78,9 +78,9 @@
         <div class="radio-dot"></div>
         <div class="option-body">
           <span class="option-name">Type a challenge</span>
-          <span class="option-desc"
-            >Type a random sequence of words to proceed.</span
-          >
+          <span class="option-desc">
+            Type a random sequence of words to proceed.
+          </span>
         </div>
       </label>
     </section>
@@ -130,25 +130,32 @@
           <button
             class="theme-btn"
             class:active={theme === 'system'}
-            onclick={() => (theme = 'system')}>System</button
+            onclick={() => (theme = 'system')}
           >
+            System
+          </button>
           <button
             class="theme-btn"
             class:active={theme === 'light'}
-            onclick={() => (theme = 'light')}>Light</button
+            onclick={() => (theme = 'light')}
           >
+            Light
+          </button>
           <button
             class="theme-btn"
             class:active={theme === 'dark'}
-            onclick={() => (theme = 'dark')}>Dark</button
+            onclick={() => (theme = 'dark')}
           >
+            Dark
+          </button>
         </div>
       </div>
     </section>
 
     <div class="save-row">
-      <button class="save-btn" onclick={() => void save()}>Save settings</button
-      >
+      <button class="save-btn" onclick={() => void save()}>
+        Save settings
+      </button>
       <span class="toast" class:visible={saved}>Saved</span>
     </div>
   </div>

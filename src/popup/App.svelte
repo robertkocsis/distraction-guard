@@ -90,8 +90,10 @@
           <button
             class="remove-btn"
             onclick={() => void remove(domain)}
-            title="Remove">✕</button
+            title="Remove"
           >
+            ✕
+          </button>
         </div>
       {/each}
     {/if}
