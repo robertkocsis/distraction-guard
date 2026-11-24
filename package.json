@@ -24,7 +24,7 @@
     "eslint": "^10.14.0",
     "eslint-plugin-svelte": "^3.23.1",
     "globals": "^17.13.0",
-    "jsdom": "^28.1.0",
+    "jsdom": "^31.0.1",
     "prettier": "^3.9.10",
     "prettier-plugin-svelte": "^3.5.2",
     "sass": "^1.107.0",
